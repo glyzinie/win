@@ -1,0 +1,64 @@
+rem =====================================================
+rem =	Filename: Create-Partitions-EFI.txt		=
+rem =							=
+rem =	Windows System Partition Standalone Version	=
+rem =							=
+rem =	2018/04/20	Version 2.0			=
+rem =	2017/08/19	Version 1.0			=
+rem =====================================================
+rem =	This script uses the DISKPART command to	=
+rem =	create 4 partitions.				=
+rem =	It's exclusively for EFI-supported PCs.		=
+rem =							=
+rem =	Please be cautious as it will erase		=
+rem =	and repartition the entire first drive.		=
+rem =							=
+rem =	It allocates partitions using the entire drive,	=
+rem =	so adjust the size of each partition if needed.	=
+rem =====================================================
+select disk 0
+clean
+convert gpt
+rem =====================================================
+rem =	1. System Partition				=
+rem =====================================================
+rem =	The size varies depending on the storage type.	=
+rem =	Regular storage like SATA connection	: 100	=
+rem =	4KB sector storage like PCIe connection	: 260	=
+rem =	Specify in [size=] accordingly.			=
+rem =====================================================
+create partition efi size=EFI-KEY
+format quick fs=fat32 label="System"
+assign letter="S"
+rem =====================================================
+rem =	2. Microsoft Reserved Partition (MSR)		=
+rem =====================================================
+create partition msr size=16
+rem =====================================================
+rem =	3. Windows System Partition			=
+rem =====================================================
+rem =	3-1. Creation of the Windows System Partition	=
+rem =====================================================
+create partition primary
+rem =====================================================
+rem =	3-2. Create space for the Recovery Partition	=
+rem =====================================================
+rem =	If you want to change, calculate the size in MB	=
+rem =	considering 1GB = 1024MB and specify in [minimum=].=
+rem =====================================================
+shrink minimum=RECOVERY-KEY
+format quick fs=ntfs label="Windows"
+assign letter="W"
+rem =====================================================
+rem =	4. Recovery Partition				=
+rem =====================================================
+create partition primary
+format quick fs=ntfs label="Windows RE tools"
+assign letter="R"
+set id="de94bba4-06d1-4d40-a16a-bfd50179d6ac"
+gpt attributes=0x8000000000000001
+rem =====================================================
+rem =	5. Display the created partitions		=
+rem =====================================================
+list partition
+exit
